@@ -2063,26 +2063,23 @@ warc_write_response_record (const char *url, const char *timestamp_str,
                             const char *concurrent_to_uuid, const ip_address *ip,
                             FILE *body, off_t payload_offset, const char *mime_type,
                             int response_code, const char *redirect_location,
-                            char *sha1_payload, const char **protocol,
+                            char *sha1_res_payload, const char **protocol,
                             const char *cipher_name)
 {
   char block_digest[BASE32_LENGTH(SHA1_DIGEST_SIZE) + 1 + 5];
   char payload_digest[BASE32_LENGTH(SHA1_DIGEST_SIZE) + 1 + 5];
   char sha1_res_block[SHA1_DIGEST_SIZE] = {0};
-  char sha1_res_payload[SHA1_DIGEST_SIZE] = {0};
   char response_uuid [48];
   const char *date;
   off_t offset;
   bool write_revisit;
   bool luahooks_revisit_malloc = false;
 
-  if (sha1_payload == NULL)
+  if (sha1_res_payload == NULL)
     {
       warc_write_ok = false;
       return false;
     }
-
-  strncpy(sha1_res_payload, sha1_payload, SHA1_DIGEST_SIZE);
 
   if (opt.warc_digests_enabled || !opt.warc_dedup_disable)
     {
@@ -2174,7 +2171,7 @@ warc_write_response_record (const char *url, const char *timestamp_str,
         }
     }
 
-  if (sha1_res_block == NULL || sha1_res_payload == NULL)
+  if (sha1_res_block == NULL)
     {
       warc_write_ok = false;
       return false;
