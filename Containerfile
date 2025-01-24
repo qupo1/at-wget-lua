@@ -1,8 +1,9 @@
 FROM debian:bookworm-slim AS wget-build
 ARG TLS_TYPE=openssl
 ENV LC_ALL=C
+ENV CFLAGS=-O2 -pipe -flto -fstack-protector-strong -fstack-clash-protection -mcet -fcf-protection -Wl,-z,defs -Wl,-z,now -Wl,-z,relro
 ENV ZSTD_VER=1.5.6
-ENV CARES_VER=1.34.3
+ENV CARES_VER=1.34.4
 RUN set -eux \
  && apt-get -y update \
  && apt-get -y --no-install-recommends upgrade \
