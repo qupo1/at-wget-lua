@@ -32,7 +32,10 @@ static int final_exit_status = WGET_EXIT_SUCCESS;
    Quite a few of the codes below would have no business being
    returned to retrieve_url's caller, but since it's very difficult to
    determine which do and which don't, I grab virtually all of them to
-   be safe. */
+   be safe.
+
+   Update 2025-08-22: Various codes that may hit this function and were
+   not included have now been sorted into this. */
 static int
 get_status_for_err (uerr_t err)
 {
@@ -41,23 +44,27 @@ get_status_for_err (uerr_t err)
     case RETROK:
       return WGET_EXIT_SUCCESS;
     case FOPENERR: case FOPEN_EXCL_ERR: case FWRITEERR: case WRITEFAILED:
-    case UNLINKERR: case CLOSEFAILED: case FILEBADFILE:
+    case UNLINKERR: case CLOSEFAILED: case FILEBADFILE: case WARC_TMP_FOPENERR:
+    case WARC_TMP_FWRITEERR: case WARC_ERR:
       return WGET_EXIT_IO_FAIL;
     case NOCONERROR: case HOSTERR: case CONSOCKERR: case CONERROR:
     case CONSSLERR: case CONIMPOSSIBLE: case FTPRERR: case FTPINVPASV:
-    case READERR: case TRYLIMEXC:
+    case READERR: case TRYLIMEXC: case METALINK_RETR_ERROR: case IP_REJECTED:
       return WGET_EXIT_NETWORK_FAIL;
     case VERIFCERTERR:
       return WGET_EXIT_SSL_AUTH_FAIL;
     case FTPLOGINC: case FTPLOGREFUSED: case AUTHFAILED:
       return WGET_EXIT_SERVER_AUTH_FAIL;
-    case HEOF: case HERR: case ATTRMISSING:
+    case HEOF: case HERR: case ATTRMISSING: case INVALID_ENCODING:
+    case TIMECONV_ERR: case METALINK_PARSE_ERROR: case METALINK_CHKSUM_ERROR:
+    case METALINK_SIG_ERROR: case METALINK_SIZE_ERROR:
       return WGET_EXIT_PROTOCOL_ERROR;
     case WRONGCODE: case FTPPORTERR: case FTPSYSERR:
     case FTPNSFOD: case FTPUNKNOWNTYPE: case FTPSRVERR:
     case FTPRETRINT: case FTPRESTFAIL: case FTPNOPASV:
     case CONTNOTSUPPORTED: case RANGEERR: case RETRBADPATTERN:
-    case PROXERR: case GATEWAYTIMEOUT:
+    case PROXERR: case GATEWAYTIMEOUT: case FTPNOPBSZ: case FTPNOPROT:
+    case FTPNOAUTH: case METALINK_MISSING_RESOURCE: case RECLEVELEXC:
       return WGET_EXIT_SERVER_ERROR;
     case URLERROR: case QUOTEXC: case SSLINITFAILED: case UNKNOWNATTR:
     default:
@@ -74,6 +81,9 @@ void
 inform_exit_status (uerr_t err)
 {
   int new_status = get_status_for_err (err);
+
+  if (new_status == WGET_EXIT_UNKNOWN)
+    new_status = 1;
 
   if (new_status != WGET_EXIT_SUCCESS
       && (final_exit_status == WGET_EXIT_SUCCESS
